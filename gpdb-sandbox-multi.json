@@ -4,8 +4,8 @@
 	"iso_url": "http://mirrors.adams.net/centos/6.7/isos/x86_64/CentOS-6.7-x86_64-bin-DVD1.iso",
 	"iso_checksum": "51f90e8ddd2ea199780065eaf75130ad",
 	"headless": "false",
-	"vm_basename":"PivotalGPDB-Sandbox",
-	"gpversion":"4.3.7.1"
+	"vm_basename":"piv-demostack",
+	"gpversion":"1.0"
 
 },
 "builders": [
@@ -80,7 +80,7 @@
 },
 {
 	"type": "file",
-	"source": "/Users/dbaskette/Software/GREENPLUM/",
+	"source": "/Users/dbaskette/Software/piv-demostack/",
 	"destination": "/tmp/bins/"
 },
 {
@@ -115,18 +115,19 @@
 	"environment_vars": "BUILD_NAME={{build_name}}",
 	"scripts": [
 		"scripts/configureGPDB.sh",
+		"scripts/installSPRINGXD.sh",
 		"scripts/installZeppelin.sh",
 		"scripts/cleanup.sh"
 	]
 }
 ],
-  "post-processors": [
+ "post-processors": [
 
 {
   "type": "compress",
   "output": "{{user `vm_basename`}}-{{user `gpversion`}}-{{build_name}}.zip",
-  "compression": 9,
-  "keep_input_artifacts":"true",
+  "compression_level": 9,
+  "keep_input_artifact":true,
   "only": ["vmware"]
 }
   ]

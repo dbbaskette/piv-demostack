@@ -37,6 +37,7 @@ install_madlib(){
 }
 
 install_pgcrypto(){
+ source /usr/local/greenplum-db/greenplum_path.sh
  gppkg -i $PGCRYPTO_FILE 
  psql -d template1 -f $GPHOME/share/postgresql/contrib/pgcrypto.sql 
  psql -d gpadmin -f $GPHOME/share/postgresql/contrib/pgcrypto.sql 

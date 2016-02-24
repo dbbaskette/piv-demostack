@@ -57,8 +57,26 @@ do
                                 echo "PGCRYPTO_FILE=$pgcrypto" >> /tmp/release.properties
                                 echo "PGCRYPTO_VERSION=$shortname" >> /tmp/release.properties
                                 ;;
-
-
+		*gemfire*)      gemfire=$justfile
+                                strip_ext $justfile
+                                echo "GEMFIRE_FILE=$gemfire" >> /tmp/release.properties
+                                echo "GEMFIRE_VERSION=$shortname" >> /tmp/release.properties
+                                ;;
+		*flo*)     	flo=$justfile
+                                strip_ext $justfile
+                                echo "FLO_FILE=$flo" >> /tmp/release.properties
+                                echo "FLO_VERSION=$shortname" >> /tmp/release.properties
+                                ;;
+		spring-xd*)     springxd=$justfile
+                                strip_ext $justfile
+                                echo "SPRINGXD=$springxd" >> /tmp/release.properties
+                                echo "SPRINGXD_VERSION=$shortname" >> /tmp/release.properties
+                                ;;
+		*maven*)        maven=$justfile
+                                strip_ext $justfile
+                                echo "MAVEN=$maven" >> /tmp/release.properties
+                                echo "MAVEN_VERSION=$shortname" >> /tmp/release.properties
+                                ;;
                 *)              echo "UNrecognized File: $justfile";exit;;
 
         esac
@@ -72,10 +90,32 @@ strip_ext(){
         *zip)          shortname=${1%.zip};;
         *tar)          shortname=${1%.tar};;
         *gz)           shortname=${1%.tar.gz};;
+        *rpm)           shortname=${1%.rpm};;
  esac
 
 
 }
+
+install_gemfire(){
+	source /tmp/release.properties
+	yum install /tmp/bins/$GEMFIRE_FILE -y
+}
+
+
+install_maven(){
+	source /tmp/release.properties
+	tar xvfz /tmp/bins/$MAVEN -C /opt
+	echo "export PATH=/opt/${MAVEN_VERSION/-bin/}/bin:\$PATH" >> /etc/profile.d/mavenpath.sh
+}
+
+setup_basedirs(){
+        echo "source /usr/local/greenplum-db/greenplum_path.sh" >> /etc/profile.d/paths.sh
+	echo "export MASTER_DATA_DIRECTORY=/gpdata/master/gpseg-1" >> /etc/profile.d/paths.sh
+	echo "export JAVA_HOME=/usr/lib/jvm/java-openjdk" >> /etc/profile.d/paths.sh
+	echo "export PATH=/usr/lib/jvm/java-openjdk/bin:\$PATH" >> /etc/profile.d/paths.sh
+}
+
+
 
 
 install_binaries(){
@@ -164,7 +204,7 @@ HOSTS
 
 # FIX IP LINE
 sed -i "/IP:/d" /etc/issue
-sed -i "13i IP: \$ip" /etc/issue
+sed -i "17i IP: \$ip" /etc/issue
 #sed -i "/^IP:/ s/$/ \$ip/" /etc/issue
 #sed -i "s/Version:/Version: $GPDB_VERSION_NUMBER/g" /etc/issue
 #sed -i "s/@@@/\$ip/g" /etc/issue
@@ -183,34 +223,35 @@ EOF
 }
 
 
+
+
 setup_message(){
 echo $BUILD_NAME
 if [[ $BUILD_NAME = "vmware" ]];then
 echo "BUILDING ISSUE for VMWARE"
 cat > /etc/issue  << EOF
-                                     ##                             
-  ###                                 #                  ####  #### 
- #    ## ##  ###   ###  ####   ###    #   # #  #####      # #   # # 
-## #   ## # ##### #####  # ##  # ##   #   # #  # # ##    #  #  ###  
-## #   #    ##    ##     # #   # #   ##   # #  # # #     # ##  # ## 
- ###  ###    ###   ###  ## ##  ##   ####  #### # # #    ####  ####  
-                              ###     
+######                                      
+#     # # #    #  ####  #####   ##   #      
+#     # # #    # #    #   #    #  #  #      
+######  # #    # #    #   #   ###### #      
+#       #  #  #  #    #   #   #    # #      
+#       #   ##    ####    #   #    # ###### 
+
+######                        #####                             
+#     # ###### #    #  ####  #     # #####   ##    ####  #    # 
+#     # #      ##  ## #    # #         #    #  #  #    # #   #  
+#     # #####  # ## # #    #  #####    #   ###### #      ####   
+#     # #      #    # #    # #     #   #   #    # #    # #   #  
+######  ###### #    #  ####   #####    #   #    #  ####  #    # 
 -----------------------------------------------------------------------------
-Welcome to the Pivotal Greenplum DB - Data Science Sandbox with Apache MADLIB
-	 Version:$GPDB_VERSION_NUMBER   - vmware edition (with PGCRYPTO)
+Welcome to the Pivotal Demostack featuring Greenplum DB, Gemfire, & Spring XD 
 -----------------------------------------------------------------------------
 Hostname: \n
 IP:
-Username: root
-Password: pivotal
-GPDB Admin: gpadmin
-GPDB Password: pivotal
-Tutorial User:  gpuser     Tutorial User Password: pivotal
------------------------------------------------------------------------------
-                To Start Database, Command Center, and Apache Zeppelin
------------------------------------------------------------------------------
-1)  Login as gpadmin
-2)  Type: ./start_all.sh
+Demo Username: pivotal   Password: pivotal
+Root Username: root      Password: pivotal
+GPDB Admin: gpadmin      Password: pivotal
+Tutorial User:  gpuser   Password: pivotal
 -----------------------------------------------------------------------------
 EOF
 
@@ -257,6 +298,9 @@ _main() {
 	setup_hostname
 	setup_ipaddress
 	install_binaries
+	install_gemfire
+	install_maven
+	setup_basedirs
 	setup_data_path
 	setup_configs
         setup_gpdb
